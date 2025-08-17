@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>100 Flexões – Básico iPhone</title>
+<style>
+:root{
+  --bg:#0b0f14;--card:#111827;--muted:#9aa4af;--text:#e5e7eb;
+  --primary:#0b5fff;--danger:#ff3b30;--border:#222a36;--ok:#10b981
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
+header{position:sticky;top:0;background:#0b0f14e6;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+h1{margin:0;font-size:18px} .muted{color:var(--muted)}
+main{max-width:800px;margin:0 auto;padding:16px;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.card h2{margin:0 0 8px 0;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+label{display:flex;flex-direction:column;gap:6px;font-size:14px}
+input[type="date"],input[type="number"]{background:#0c1220;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--text)}
+button{cursor:pointer;border:none;border-radius:10px;padding:12px 14px;background:#1f2937;color:var(--text);font-size:16px}
+button.primary{background:var(--primary);color:#fff}button.ghost{background:transparent;border:1px solid var(--border)}
+button.danger{background:var(--danger);color:#fff} button.small{font-size:13px;padding:6px 10px;border-radius:8px}
+.sets{display:flex;gap:8px;flex-wrap:wrap}
+.set{background:#0c1220;border:1px solid var(--border);padding:10px;border-radius:10px;min-width:96px}
+.set .title{font-size:12px;color:var(--muted)}.set .reps{font-size:18px;font-weight:600}
+.badge{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted);display:inline-block;margin-right:6px;margin-bottom:6px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+/* Overlay */
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px}
+#overlay.show{display:flex}
+.overlay-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;max-width:420px;width:100%}
+.overlay-card h3{margin:0 0 4px 0} .big{font-size:40px;font-variant-tabular-nums:tabular-nums;text-align:center;margin:8px 0}
+.overlay-controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.timer-note{text-align:center;color:var(--muted);font-size:13px}
+table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--border);font-size:14px;text-align:left}
+</style>
+</head>
+<body>
+<header>
+  <h1>100 Flexões – Básico</h1>
+  <span class="muted">v2025.08.17-1252</span>
+</header>
+<main>
+  <section class="card">
+    <h2>Configuração</h2>
+    <div class="grid">
+      <label>Data de início
+        <input type="date" id="startDate">
+      </label>
+      <label>Máximo atual (M)
+        <input type="number" id="currentMax" min="1" step="1" value="15">
+      </label>
+    </div>
+    <div class="actions">
+      <button id="saveSettings" class="primary">Guardar</button>
+      <button id="resetApp" class="ghost">Repor</button>
+    </div>
+    <p class="muted">iPhone: para lembretes fiáveis usa o ficheiro .ics que te dei. Esta página serve o treino e o cronómetro.</p>
+  </section>
+
+  <section class="card">
+    <h2>Treino de hoje</h2>
+    <div id="todayMeta"></div>
+    <div id="setsList" class="sets"></div>
+    <div class="actions">
+      <button id="startWorkout" class="primary">Iniciar treino</button>
+      <button id="markCompleted" class="ghost">Marcar como concluído</button>
+    </div>
+
+    <div id="postSession" class="post" style="margin-top:10px;display:none">
+      <h3>Registo</h3>
+      <label><input type="checkbox" id="techOk"> Técnica correta</label>
+      <label><input type="checkbox" id="rirPlenty"> Em ≥3 séries sobraram ≥2 reps</label>
+      <div id="testBlock" style="display:none">
+        <label>AMRAP (apenas no dia de teste)
+          <input type="number" id="amrapInput" min="1" step="1">
+        </label>
+      </div>
+      <div class="actions">
+        <button id="saveSession" class="primary">Guardar registo</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Histórico</h2>
+    <div id="history"></div>
+  </section>
+</main>
+
+<!-- Overlay do treino guiado com cronómetro -->
+<div id="overlay">
+  <div class="overlay-card">
+    <h3 id="ovTitle">Série 1</h3>
+    <div class="big" id="ovTarget">Objetivo: 10</div>
+    <div id="ovRest" style="display:none">
+      <div class="big" id="ovTimer">01:30</div>
+      <div class="timer-note">Descanso</div>
+    </div>
+    <div class="overlay-controls">
+      <button id="btnDone" class="primary">Terminei a série</button>
+      <button id="btnFail" class="danger">Falhei</button>
+      <button id="btnClose" class="ghost small">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ------- Estado simples -------
+const STORAGE = "pushups-basic-v1";
+const DEFAULT = () => ({
+  startDate: new Date().toISOString().slice(0,10),
+  maxNow: 15,
+  offsets: {H:[0,0,0,0,0], M:[0,0,0,0,0], L:[0,0,0,0,0]},
+  failsInRow: {H:0,M:0,L:0},
+  rest: {L:[60,60,60,60,90], M:[90,90,90,90,120], H:[120,120,120,120,150]},
+  history: []
+});
+let state = load();
+
+function load(){ try{ return Object.assign(DEFAULT(), JSON.parse(localStorage.getItem(STORAGE)||"{}")); }catch{ return DEFAULT(); } }
+function save(){ localStorage.setItem(STORAGE, JSON.stringify(state)); }
+
+// ------- Utilitários -------
+const $ = s=>document.querySelector(s);
+function toLocalDate(d){ const tz = (new Date()).getTimezoneOffset()*60000; return new Date(new Date(d).getTime() - tz).toISOString().slice(0,10); }
+function daysSince(a,b){ const A=new Date(a+"T00:00:00"), B=new Date(b+"T00:00:00"); return Math.floor((B-A)/86400000); }
+function todayYMD(){ return toLocalDate(new Date()); }
+function dayTypeFor(startYMD, dateYMD){
+  const d = daysSince(startYMD, dateYMD); const m = ((d%7)+7)%7;
+  return m===6 ? "T" : ["H","M","L","H","M","L"][m];
+}
+
+// ------- Lógica de séries -------
+const BASE = {H:[0.80,0.60,0.50,0.70,0.60], M:[0.70,0.50,0.40,0.60,0.50], L:[0.60,0.40,0.30,0.50,0.40]};
+function targetsFor(type, M){
+  if (type==="T") return ["AMRAP", Math.max(1,Math.round(M*0.40)), Math.max(1,Math.round(M*0.30)), Math.max(1,Math.round(M*0.30)), Math.max(1,Math.round(M*0.30))];
+  const base = BASE[type].map(p => Math.max(1, Math.round(p*M)));
+  const offs = state.offsets[type];
+  return base.map((v,i)=> Math.max(1, v + (offs[i]||0)));
+}
+function typeName(t){ return {H:"Pesado",M:"Moderado",L:"Leve",T:"Teste semanal"}[t]; }
+
+// ------- Render -------
+function renderSettings(){
+  $("#startDate").value = state.startDate;
+  $("#currentMax").value = state.maxNow;
+}
+function renderToday(){
+  const ymd = todayYMD(); const t = dayTypeFor(state.startDate, ymd);
+  const tar = targetsFor(t, state.maxNow);
+  const rests = (t==="T") ? [60,60,60,60,60] : state.rest[t];
+  $("#todayMeta").innerHTML = `<span class="badge">Dia: ${ymd}</span><span class="badge">Tipo: ${typeName(t)}</span><span class="badge">M: ${state.maxNow}</span>`;
+  const el = $("#setsList"); el.innerHTML = "";
+  tar.forEach((x,i)=>{ const d=document.createElement("div"); d.className="set"; d.innerHTML=`<div class="title">Série ${i+1}</div><div class="reps">${x} reps</div><div class="title">Descanso</div><div class="reps">${rests[i]} s</div>`; el.appendChild(d); });
+  $("#testBlock").style.display = (t==="T") ? "block" : "none";
+  $("#postSession").style.display = "block";
+}
+function renderHistory(){
+  const h = state.history.slice().reverse();
+  if (!h.length) { $("#history").innerHTML = '<p class="muted">Sem registos.</p>'; return; }
+  const rows = h.map(r=>`<tr><td>${r.date}</td><td>${r.type}</td><td>${r.targets.join("·")}${r.amrap?(" | AMRAP: "+r.amrap):""}</td><td>${r.completed?"✅":(r.anyFail?"❌":"—")}</td></tr>`).join("");
+  $("#history").innerHTML = `<table><thead><tr><th>Data</th><th>Tipo</th><th>Detalhes</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ------- Regras de progressão -------
+function applyRules(type, session){
+  if (type==="T") return;
+  const {completed, anyFail, techOk, rirPlenty, fifthFailed} = session;
+  if (completed && techOk) {
+    const inc = rirPlenty ? 2 : 1;
+    state.offsets[type] = state.offsets[type].map(v=>v+inc);
+    state.failsInRow[type]=0;
+  } else if (anyFail) {
+    state.failsInRow[type]=(state.failsInRow[type]||0)+1;
+    if (state.failsInRow[type]>=2) {
+      state.offsets[type]=state.offsets[type].map(v=>Math.max(-50, v-2));
+      state.failsInRow[type]=0;
+    }
+  }
+  if (fifthFailed) {
+    const r = state.rest[type]; r[4] = Math.min(300, r[4]+30); state.rest[type] = r;
+  }
+}
+
+// ------- Overlay / Cronómetro -------
+let guided = {active:false,type:null,targets:[],rests:[],idx:0,fails:[false,false,false,false,false]};
+let restTimer=null, restLeft=0;
+function fmt(s){const m=Math.floor(s/60),r=s%60;return `${(""+m).padStart(2,"0")}:${(""+r).padStart(2,"0")}`;}
+function openOv(){ $("#overlay").classList.add("show"); }
+function closeOv(){ $("#overlay").classList.remove("show"); if (restTimer) clearInterval(restTimer); restTimer=null; }
+function showSet(){
+  $("#ovTitle").textContent = `Série ${guided.idx+1}`;
+  $("#ovTarget").textContent = `Objetivo: ${guided.targets[guided.idx]} reps`;
+  $("#ovRest").style.display = "none";
+}
+function nextSet(){
+  guided.idx++;
+  if (guided.idx>=guided.targets.length) { closeOv(); $("#postSession").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  showSet();
+}
+function startGuided(){
+  const ymd = todayYMD(); const t = dayTypeFor(state.startDate, ymd);
+  guided.type=t; guided.targets=targetsFor(t,state.maxNow); guided.rests=(t==="T")?[60,60,60,60,60]:state.rest[t]; guided.idx=0; guided.fails=[false,false,false,false,false];
+  openOv(); showSet();
+}
+function startRest(sec){
+  restLeft=sec; $("#ovRest").style.display="block"; $("#ovTimer").textContent=fmt(restLeft);
+  if (restTimer) clearInterval(restTimer);
+  restTimer = setInterval(()=>{ restLeft--; $("#ovTimer").textContent=fmt(Math.max(0,restLeft)); if (restLeft<=0){ clearInterval(restTimer); restTimer=null; $("#ovRest").style.display="none"; nextSet(); } }, 1000);
+}
+
+// ------- Eventos -------
+$("#saveSettings").addEventListener("click", ()=>{ state.startDate=$("#startDate").value||todayYMD(); state.maxNow=Math.max(1,parseInt($("#currentMax").value,10)||15); save(); renderSettings(); renderToday(); alert("Guardado."); });
+$("#resetApp").addEventListener("click", ()=>{ if(!confirm("Apagar dados?")) return; state=DEFAULT(); save(); renderSettings(); renderToday(); renderHistory(); });
+$("#startWorkout").addEventListener("click", startGuided);
+$("#markCompleted").addEventListener("click", ()=>{ guided={active:true,type:null,targets:[0,0,0,0,0],rests:[],idx:5,fails:[false,false,false,false,false]}; $("#postSession").style.display="block"; });
+$("#saveSession").addEventListener("click", ()=>{
+  const ymd=todayYMD(); const t=dayTypeFor(state.startDate, ymd);
+  const tar=targetsFor(t,state.maxNow);
+  const techOk=$("#techOk").checked; const rirPlenty=$("#rirPlenty").checked;
+  const anyFail=guided.fails.some(v=>v===true); const fifthFailed=!!guided.fails[4];
+  let amrap=null; if (t==="T"){ const v=parseInt($("#amrapInput").value,10); if(Number.isFinite(v)&&v>0) amrap=v; }
+  state.history.push({date:ymd,type:t,targets:tar,completed:!anyFail&&techOk,anyFail,techOk,rirPlenty,amrap});
+  if (t==="T" && amrap) { state.maxNow = Math.max(state.maxNow, Math.round(amrap)); } else { applyRules(t, {completed:!anyFail&&techOk, anyFail, techOk, rirPlenty, fifthFailed}); }
+  save(); guided={active:false,type:null,targets:[],rests:[],idx:0,fails:[false,false,false,false,false]};
+  $("#techOk").checked=false; $("#rirPlenty").checked=false; $("#amrapInput").value="";
+  renderToday(); renderHistory(); alert("Registo guardado.");
+});
+$("#btnDone").addEventListener("click", ()=>{ const idx=guided.idx; if (idx===guided.targets.length-1) { nextSet(); return; } startRest(guided.rests[idx]||60); });
+$("#btnFail").addEventListener("click", ()=>{ guided.fails[guided.idx]=true; const idx=guided.idx; if (idx===guided.targets.length-1) { nextSet(); return; } startRest(guided.rests[idx]||60); });
+$("#btnClose").addEventListener("click", closeOv);
+
+// ------- Boot -------
+(function init(){
+  renderSettings(); renderToday(); renderHistory();
+  if (!state.startDate) { state.startDate = todayYMD(); save(); }
+  $("#startDate").value = state.startDate;
+})();
+</script>
+</body>
+</html>
