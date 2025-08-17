@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>100 Flexões – iPhone (Pro+)</title>
+<style>
+:root{--bg:#0b0f14;--card:#111827;--muted:#9aa4af;--text:#e5e7eb;--primary:#0b5fff;--danger:#ff3b30;--border:#222a36;--ok:#10b981}
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
+header{position:sticky;top:0;background:#0b0f14e6;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;gap:10px;justify-content:space-between;align-items:center;z-index:2;flex-wrap:wrap}
+h1{margin:0;font-size:18px} .muted{color:var(--muted)}
+main{max-width:1000px;margin:0 auto;padding:16px;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.card h2{margin:0 0 8px 0;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+label{display:flex;flex-direction:column;gap:6px;font-size:14px}
+input[type="date"],input[type="number"]{background:#0c1220;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--text)}
+button{cursor:pointer;border:none;border-radius:10px;padding:12px 14px;background:#1f2937;color:var(--text);font-size:16px}
+button.primary{background:var(--primary);color:#fff}button.ghost{background:transparent;border:1px solid var(--border)}
+button.danger{background:var(--danger);color:#fff} button.small{font-size:13px;padding:6px 10px;border-radius:8px}
+.sets{display:flex;gap:8px;flex-wrap:wrap}
+.set{background:#0c1220;border:1px solid var(--border);padding:10px;border-radius:10px;min-width:96px}
+.set .title{font-size:12px;color:var(--muted)}.set .reps{font-size:18px;font-weight:600}
+.badge{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.badge.ok{color:#e5e7eb;border-color:#10b981}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+/* Overlay */
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:3}
+#overlay.show{display:flex}
+.overlay-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;max-width:420px;width:100%}
+.overlay-card h3{margin:0 0 4px 0} .big{font-size:40px;font-variant-tabular-nums:tabular-nums;text-align:center;margin:8px 0}
+.overlay-controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.timer-note{text-align:center;color:var(--muted);font-size:13px}
+table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--border);font-size:14px;text-align:left}
+.canvas-wrap{background:#0c1220;border:1px solid var(--border);border-radius:12px;padding:10px;overflow:auto}
+canvas{max-width:100%;height:260px}
+.hr{height:1px;background:var(--border);margin:10px 0}
+.inputs-inline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.inputs-inline input{width:100%}
+details{border:1px dashed var(--border);border-radius:10px;padding:10px;background:#0c122033}
+details>summary{cursor:pointer;font-weight:600;margin-bottom:8px}
+.badge-list{display:flex;gap:8px;flex-wrap:wrap}
+.kpi-row{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+  <h1>100 Flexões – iPhone</h1>
+  <span class="muted" id="version">v2025.08.17-1944</span>
+  <span id="streakNow" class="badge ok" title="Dias consecutivos com registo">🔥 Streak: 0</span>
+  <span id="bestStreak" class="badge" title="Melhor streak">🏆 Recorde: 0</span>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Configuração</h2>
+    <div class="grid">
+      <label>Data de início
+        <input type="date" id="startDate">
+      </label>
+      <label>Máximo atual (M)
+        <input type="number" id="currentMax" min="1" step="1" value="15">
+      </label>
+      <label>Silêncio (sem bips)
+        <input type="checkbox" id="mute">
+      </label>
+    </div>
+    <details>
+      <summary>Descansos (editar por tipo e série)</summary>
+      <div class="grid">
+        <div>
+          <div class="muted">Leve (L) – s</div>
+          <div class="inputs-inline" id="restL"></div>
+        </div>
+        <div>
+          <div class="muted">Moderado (M) – s</div>
+          <div class="inputs-inline" id="restM"></div>
+        </div>
+        <div>
+          <div class="muted">Pesado (H) – s</div>
+          <div class="inputs-inline" id="restH"></div>
+        </div>
+      </div>
+      <div class="actions"><button id="saveRests" class="ghost">Guardar descansos</button></div>
+    </details>
+    <div class="actions">
+      <button id="saveSettings" class="primary">Guardar</button>
+      <button id="resetApp" class="ghost">Repor</button>
+      <button id="scrollReports" class="ghost">Ver relatórios</button>
+    </div>
+    <p class="muted">Lembretes: usa o .ics diário (18h). Esta página faz treino, cronómetro, gráficos, streaks e badges.</p>
+  </section>
+
+  <section class="card">
+    <h2>Treino de hoje</h2>
+    <div id="todayMeta" class="kpi-row"></div>
+    <div id="setsList" class="sets"></div>
+    <div class="actions">
+      <button id="startWorkout" class="primary">Iniciar treino</button>
+      <button id="markCompleted" class="ghost">Marcar como concluído</button>
+    </div>
+
+    <div id="postSession" class="post" style="margin-top:10px;display:none">
+      <h3>Registo</h3>
+      <label><input type="checkbox" id="techOk"> Técnica correta</label>
+      <label><input type="checkbox" id="rirPlenty"> Em ≥3 séries sobraram ≥2 reps</label>
+      <div id="perSetInputs">
+        <div class="hr"></div>
+        <div id="perSetTitle" class="muted" style="margin-bottom:6px">Repetições realizadas por série (edita se necessário)</div>
+        <div class="inputs-inline" id="perSetFields"></div>
+      </div>
+      <div id="testBlock" style="display:none;margin-top:8px">
+        <div class="muted">No dia de teste, a Série 1 é AMRAP técnico.</div>
+      </div>
+      <div class="actions">
+        <button id="saveSession" class="primary">Guardar registo</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="reports">
+    <h2>Relatórios</h2>
+    <div class="canvas-wrap">
+      <canvas id="dailyChart" width="900" height="260"></canvas>
+    </div>
+    <p class="muted">Total diário de flexões (linha) e média móvel 7 dias (linha tracejada).</p>
+    <div class="canvas-wrap" style="margin-top:10px">
+      <canvas id="weeklyChart" width="900" height="260"></canvas>
+    </div>
+    <p class="muted">Total semanal (ISO) e tendência.</p>
+  </section>
+
+  <section class="card">
+    <h2>Conquistas</h2>
+    <div id="badges" class="badge-list"></div>
+  </section>
+
+  <section class="card">
+    <h2>Histórico</h2>
+    <div id="history"></div>
+  </section>
+</main>
+
+<!-- Overlay do treino guiado com cronómetro -->
+<div id="overlay">
+  <div class="overlay-card">
+    <h3 id="ovTitle">Série 1</h3>
+    <div class="big" id="ovTarget">Objetivo: 10</div>
+    <div id="ovRest" style="display:none">
+      <div class="big" id="ovTimer">01:30</div>
+      <div class="timer-note" id="ovNote">Descanso</div>
+    </div>
+    <div class="overlay-controls">
+      <button id="btnDone" class="primary">Terminei a série</button>
+      <button id="btnFail" class="danger">Falhei</button>
+      <button id="btnSkip" class="ghost small">Pular descanso</button>
+      <button id="btnClose" class="ghost small">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ------- Estado -------
+const STORAGE = "pushups-pro-v3";
+const DEFAULT = () => ({
+  startDate: new Date().toISOString().slice(0,10),
+  maxNow: 15,
+  mute: false,
+  offsets: {H:[0,0,0,0,0], M:[0,0,0,0,0], L:[0,0,0,0,0]},
+  failsInRow: {H:0,M:0,L:0},
+  rest: {L:[60,60,60,60,90], M:[90,90,90,90,120], H:[120,120,120,120,150]},
+  history: [], // {date,type,targets,perSet,totalDone,completed,anyFail,techOk,rirPlenty,amrap}
+  badges: [], // {id,label,date}
+  bestStreak: 0
+});
+let state = load();
+function load(){ try{ return Object.assign(DEFAULT(), JSON.parse(localStorage.getItem(STORAGE)||"{}")); }catch{ return DEFAULT(); } }
+function save(){ localStorage.setItem(STORAGE, JSON.stringify(state)); }
+
+// ------- Utils -------
+const $ = s=>document.querySelector(s);
+function toLocalDate(d){ const tz = (new Date()).getTimezoneOffset()*60000; return new Date(new Date(d).getTime() - tz).toISOString().slice(0,10); }
+function dateAdd(ymd, delta){ const d=new Date(ymd+"T00:00:00"); d.setDate(d.getDate()+delta); return toLocalDate(d); }
+function diffDays(a,b){ const A=new Date(a+"T00:00:00"), B=new Date(b+"T00:00:00"); return Math.floor((B-A)/86400000); }
+function todayYMD(){ return toLocalDate(new Date()); }
+function dayTypeFor(startYMD, dateYMD){
+  const d = diffDays(startYMD, dateYMD); const m = ((d%7)+7)%7;
+  return m===6 ? "T" : ["H","M","L","H","M","L"][m];
+}
+const BASE = {H:[0.80,0.60,0.50,0.70,0.60], M:[0.70,0.50,0.40,0.60,0.50], L:[0.60,0.40,0.30,0.50,0.40]};
+function targetsFor(type, M){
+  if (type==="T") return ["AMRAP", Math.max(1,Math.round(M*0.40)), Math.max(1,Math.round(M*0.30)), Math.max(1,Math.round(M*0.30)), Math.max(1,Math.round(M*0.30))];
+  const base = BASE[type].map(p => Math.max(1, Math.round(p*M)));
+  const offs = state.offsets[type];
+  return base.map((v,i)=> Math.max(1, v + (offs[i]||0)));
+}
+function typeName(t){ return {H:"Pesado",M:"Moderado",L:"Leve",T:"Teste semanal"}[t]; }
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+// ------- Streaks & Badges -------
+function uniqueDates(history){
+  const s = new Set(history.map(r=>r.date));
+  return Array.from(s).sort();
+}
+function computeStreak(history){
+  const dates = uniqueDates(history);
+  if (!dates.length) return 0;
+  // streak termina no último dia com registo
+  let streak = 1;
+  for (let i=dates.length-1; i>0; i--){
+    const cur = dates[i], prev = dates[i-1];
+    if (diffDays(prev, cur) === 1) streak++;
+    else break;
+  }
+  return streak;
+}
+function totalReps(history){
+  return history.reduce((a,r)=> a + (r.totalDone || 0), 0);
+}
+function maxSingle(history){
+  let m = 0;
+  history.forEach(r=>{
+    if (Array.isArray(r.perSet)) r.perSet.forEach(x=>{ const v = parseInt(x)||0; if (v>m) m=v; });
+    if (r.amrap) m = Math.max(m, r.amrap);
+  });
+  return m;
+}
+const BADGE_DEFS = [
+  {id:"streak3", label:"🔥 Streak 3 dias", cond: s=> s>=3},
+  {id:"streak7", label:"🔥 Streak 7 dias", cond: s=> s>=7},
+  {id:"streak14", label:"🔥 Streak 14 dias", cond: s=> s>=14},
+  {id:"streak30", label:"🔥 Streak 30 dias", cond: s=> s>=30},
+  {id:"total500", label:"🎯 500 reps totais", cond: (_,t)=> t>=500},
+  {id:"total1000", label:"🎯 1000 reps totais", cond: (_,t)=> t>=1000},
+  {id:"total2000", label:"🎯 2000 reps totais", cond: (_,t)=> t>=2000},
+  {id:"pr20", label:"🏅 PR 20 numa série", cond: (_,__,pr)=> pr>=20},
+  {id:"pr40", label:"🏅 PR 40 numa série", cond: (_,__,pr)=> pr>=40},
+  {id:"pr60", label:"🏅 PR 60 numa série", cond: (_,__,pr)=> pr>=60},
+  {id:"pr80", label:"🏅 PR 80 numa série", cond: (_,__,pr)=> pr>=80},
+  {id:"pr100", label:"🏅 100 numa série", cond: (_,__,pr)=> pr>=100}
+];
+function hasBadge(id){ return state.badges.some(b=>b.id===id); }
+function unlockBadges(){
+  const s = computeStreak(state.history);
+  state.bestStreak = Math.max(state.bestStreak||0, s);
+  const t = totalReps(state.history);
+  const pr = maxSingle(state.history);
+  BADGE_DEFS.forEach(def=>{
+    if (!hasBadge(def.id) && def.cond(s,t,pr)){
+      state.badges.push({id:def.id, label:def.label, date: todayYMD()});
+    }
+  });
+}
+function renderBadges(){
+  const box = $("#badges"); box.innerHTML = "";
+  if (!state.badges.length){ box.innerHTML = '<span class="muted">Ainda sem conquistas. Treina e regista para começar a desbloquear.</span>'; return; }
+  state.badges.forEach(b=>{
+    const el = document.createElement("span");
+    el.className="badge ok";
+    el.textContent = `${b.label} · ${b.date}`;
+    box.appendChild(el);
+  });
+}
+function renderStreaks(){
+  const s = computeStreak(state.history);
+  $("#streakNow").textContent = `🔥 Streak: ${s}`;
+  $("#bestStreak").textContent = `🏆 Recorde: ${state.bestStreak||s}`;
+}
+
+// ------- Render -------
+function renderSettings(){
+  $("#startDate").value = state.startDate;
+  $("#currentMax").value = state.maxNow;
+  $("#mute").checked = !!state.mute;
+  // descansos
+  const buildRow = (arr, id) => {
+    const wrap = document.getElementById(id);
+    wrap.innerHTML = "";
+    arr.forEach((v,i)=>{
+      const d = document.createElement("div");
+      d.innerHTML = `<label>S${i+1}<input type="number" min="0" step="1" value="${v}" id="${id}-${i}"></label>`;
+      wrap.appendChild(d);
+    });
+  };
+  buildRow(state.rest.L, "restL");
+  buildRow(state.rest.M, "restM");
+  buildRow(state.rest.H, "restH");
+}
+function buildPerSetInputs(targets){
+  const wrap = $("#perSetFields"); wrap.innerHTML="";
+  targets.forEach((t,i)=>{
+    const lab = (i===0 && t==="AMRAP") ? "AMRAP" : `S${i+1}`;
+    const def = t==="AMRAP" ? "" : t;
+    const el = document.createElement("div");
+    el.innerHTML = `<label>${lab}<input type="number" min="0" step="1" value="${def}" id="perSet${i}"></label>`;
+    wrap.appendChild(el);
+  });
+}
+function renderToday(){
+  const ymd = todayYMD(); const t = dayTypeFor(state.startDate, ymd);
+  const tar = targetsFor(t, state.maxNow);
+  const rests = (t==="T") ? [60,60,60,60,60] : state.rest[t];
+  $("#todayMeta").innerHTML = `<span class="badge">Dia: ${ymd}</span><span class="badge">Tipo: ${typeName(t)}</span><span class="badge">M: ${state.maxNow}</span>`;
+  const el = $("#setsList"); el.innerHTML = "";
+  tar.forEach((x,i)=>{ const d=document.createElement("div"); d.className="set"; d.innerHTML=`<div class="title">Série ${i+1}</div><div class="reps">${x} reps</div><div class="title">Descanso</div><div class="reps">${rests[i]} s</div>`; el.appendChild(d); });
+  $("#testBlock").style.display = (t==="T") ? "block" : "none";
+  $("#postSession").style.display = "block";
+  buildPerSetInputs(tar);
+}
+function renderHistory(){
+  const h = state.history.slice().reverse();
+  if (!h.length) { $("#history").innerHTML = '<p class="muted">Sem registos.</p>'; return; }
+  const rows = h.map(r=>`<tr><td>${r.date}</td><td>${r.type}</td><td>${r.targets.join("·")}${r.amrap?(" | AMRAP: "+r.amrap):""}</td><td>${r.totalDone ?? ""}</td><td>${r.completed?"✅":(r.anyFail?"❌":"—")}</td></tr>`).join("");
+  $("#history").innerHTML = `<table><thead><tr><th>Data</th><th>Tipo</th><th>Alvos</th><th>Total feito</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function isoWeek(dateStr){
+  const d = new Date(dateStr+"T00:00:00");
+  const day = (d.getDay()+6)%7;
+  d.setDate(d.getDate()-day+3);
+  const firstThursday = new Date(d.getFullYear(),0,4);
+  const diff = d - firstThursday;
+  return d.getFullYear()+"-W"+String(1+Math.round(diff/604800000)).padStart(2,"0");
+}
+function dailyTotals(){
+  const map = new Map();
+  state.history.forEach(r=>{
+    const t = r.totalDone ?? (Array.isArray(r.perSet)? r.perSet.reduce((a,b)=>a+(parseInt(b)||0),0) : 0);
+    map.set(r.date, (map.get(r.date)||0) + t);
+  });
+  const dates = Array.from(map.keys()).sort();
+  return {labels:dates, data:dates.map(k=>map.get(k))};
+}
+function weeklyTotals(){
+  const map = new Map();
+  state.history.forEach(r=>{
+    const wk = isoWeek(r.date);
+    const t = r.totalDone ?? (Array.isArray(r.perSet)? r.perSet.reduce((a,b)=>a+(parseInt(b)||0),0) : 0);
+    map.set(wk, (map.get(wk)||0) + t);
+  });
+  const labels = Array.from(map.keys()).sort();
+  return {labels, data:labels.map(k=>map.get(k))};
+}
+function movingAvg(arr, n=7){
+  const out = []; for (let i=0;i<arr.length;i++){ const s = Math.max(0,i-n+1); const slice = arr.slice(s,i+1); const sum = slice.reduce((a,b)=>a+b,0); out.push(sum / slice.length); } return out;
+}
+
+// ------- Charts -------
+function drawChart(canvasId, labels, data, title, trend=true){
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+  const pad = {l:50,r:20,t:20,b:40};
+  const w = c.width - pad.l - pad.r, h = c.height - pad.t - pad.b;
+  const max = Math.max(10, Math.max(...data,0)*1.15);
+  ctx.strokeStyle = "#223046"; ctx.lineWidth = 1;
+  const ySteps = 5;
+  for (let i=0;i<=ySteps;i++){ const y = pad.t + h - (i/ySteps)*h; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+w,y); ctx.stroke();
+    const val = Math.round((i/ySteps)*max);
+    ctx.fillStyle="#9aa4af"; ctx.font="12px system-ui"; ctx.fillText(String(val), 8, y+4);
+  }
+  const step = Math.ceil((labels.length||1)/8);
+  labels.forEach((lb,i)=>{ if (i%step===0){ const x = pad.l + (i/((labels.length-1)||1))*w; ctx.fillStyle="#9aa4af"; ctx.font="12px system-ui"; ctx.fillText(lb, x-20, pad.t+h+18); }});
+  ctx.strokeStyle = "#0b5fff"; ctx.lineWidth = 2; ctx.beginPath();
+  data.forEach((v,i)=>{ const x = pad.l + (i/((labels.length-1)||1))*w; const y = pad.t + h - (v/max)*h; if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  ctx.stroke();
+  if (trend && data.length>1){
+    const ma = movingAvg(data, Math.min(7, Math.max(2, Math.floor(data.length/3)||2)));
+    ctx.setLineDash([6,6]); ctx.strokeStyle="#10b981"; ctx.beginPath();
+    ma.forEach((v,i)=>{ const x = pad.l + (i/((labels.length-1)||1))*w; const y = pad.t + h - (v/max)*h; if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.fillStyle="#e5e7eb"; ctx.font="bold 14px system-ui"; ctx.fillText(title, pad.l, 16);
+}
+function renderCharts(){
+  const d = dailyTotals(); drawChart("dailyChart", d.labels, d.data, "Total diário (reps) + média móvel");
+  const w = weeklyTotals(); drawChart("weeklyChart", w.labels, w.data, "Total semanal (ISO) + média móvel");
+}
+
+// ------- Progressão -------
+function applyRules(type, session){
+  if (type==="T") return;
+  const {completed, anyFail, techOk, rirPlenty, fifthFailed} = session;
+  if (completed && techOk) {
+    const inc = rirPlenty ? 2 : 1;
+    state.offsets[type] = state.offsets[type].map(v=>v+inc);
+    state.failsInRow[type]=0;
+  } else if (anyFail) {
+    state.failsInRow[type]=(state.failsInRow[type]||0)+1;
+    if (state.failsInRow[type]>=2) {
+      state.offsets[type]=state.offsets[type].map(v=>Math.max(-50, v-2));
+      state.failsInRow[type]=0;
+    }
+  }
+  if (fifthFailed) {
+    const r = state.rest[type]; r[4] = Math.min(300, r[4]+30); state.rest[type] = r;
+  }
+}
+
+// ------- Overlay / Cronómetro + Beeps -------
+let guided = {active:false,type:null,targets:[],rests:[],idx:0,fails:[false,false,false,false,false]};
+let restTimer=null, restLeft=0;
+let audioCtx=null;
+function getAudio(){ try{ if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} return audioCtx; }
+function beep(ms=250, freq=880, vol=0.04){
+  if (state.mute) return;
+  const a = getAudio(); if (!a) return;
+  const o = a.createOscillator(); const g = a.createGain();
+  o.type = "sine"; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, a.currentTime);
+  o.connect(g); g.connect(a.destination); o.start();
+  g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + ms/1000);
+  o.stop(a.currentTime + ms/1000 + 0.02);
+}
+function fmt(s){const m=Math.floor(s/60),r=s%60;return `${(""+m).padStart(2,"0")}:${(""+r).padStart(2,"0")}`;}
+function openOv(){ $("#overlay").classList.add("show"); }
+function closeOv(){ $("#overlay").classList.remove("show"); if (restTimer) clearInterval(restTimer); restTimer=null; }
+function showSet(){
+  $("#ovTitle").textContent = `Série ${guided.idx+1}`;
+  $("#ovTarget").textContent = `Objetivo: ${guided.targets[guided.idx]} reps`;
+  $("#ovRest").style.display = "none";
+  $("#ovNote").textContent = "Descanso";
+}
+function nextSet(){
+  guided.idx++;
+  if (guided.idx>=guided.targets.length) { closeOv(); $("#postSession").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  showSet();
+}
+function startGuided(){
+  const ymd = todayYMD(); const t = dayTypeFor(state.startDate, ymd);
+  guided.type=t; guided.targets=targetsFor(t,state.maxNow); guided.rests=(t==="T")?[60,60,60,60,60]:state.rest[t]; guided.idx=0; guided.fails=[false,false,false,false,false];
+  openOv(); showSet();
+}
+function startRest(sec){
+  restLeft=sec; $("#ovRest").style.display="block"; $("#ovTimer").textContent=fmt(restLeft);
+  if (restTimer) clearInterval(restTimer);
+  restTimer = setInterval(()=>{
+    restLeft--; $("#ovTimer").textContent=fmt(Math.max(0,restLeft));
+    if (restLeft<=5 && restLeft>0) beep(120, 900, 0.03);
+    if (restLeft<=0){ clearInterval(restTimer); restTimer=null; $("#ovRest").style.display="none"; beep(300, 1200, 0.05); nextSet(); }
+  }, 1000);
+}
+
+// ------- Eventos -------
+$("#saveSettings").addEventListener("click", ()=>{ 
+  state.startDate=$("#startDate").value||todayYMD(); 
+  state.maxNow=Math.max(1,parseInt($("#currentMax").value,10)||15); 
+  state.mute = !!$("#mute").checked;
+  save(); renderSettings(); renderToday(); renderStreaks(); renderBadges(); alert("Guardado."); 
+});
+$("#saveRests").addEventListener("click", ()=>{
+  function readRow(id, def){ const arr=[]; for (let i=0;i<5;i++){ const v = parseInt(document.getElementById(id+"-"+i).value,10); arr.push(Number.isFinite(v)? v : def[i]); } return arr; }
+  state.rest.L = readRow("restL", state.rest.L);
+  state.rest.M = readRow("restM", state.rest.M);
+  state.rest.H = readRow("restH", state.rest.H);
+  save(); renderToday(); alert("Descansos guardados.");
+});
+$("#resetApp").addEventListener("click", ()=>{ if(!confirm("Apagar dados?")) return; state=DEFAULT(); save(); renderSettings(); renderToday(); renderHistory(); renderCharts(); renderStreaks(); renderBadges(); });
+$("#scrollReports").addEventListener("click", ()=>{ document.getElementById("reports").scrollIntoView({behavior:"smooth"}); });
+$("#startWorkout").addEventListener("click", startGuided);
+$("#markCompleted").addEventListener("click", ()=>{ guided={active:true,type:null,targets:[0,0,0,0,0],rests:[],idx:5,fails:[false,false,false,false,false]}; $("#postSession").style.display="block"; });
+$("#btnDone").addEventListener("click", ()=>{ const idx=guided.idx; if (idx===guided.targets.length-1) { nextSet(); return; } startRest(guided.rests[idx]||60); });
+$("#btnFail").addEventListener("click", ()=>{ guided.fails[guided.idx]=true; const idx=guided.idx; if (idx===guided.targets.length-1) { nextSet(); return; } startRest(guided.rests[idx]||60); });
+$("#btnSkip").addEventListener("click", ()=>{ if (restTimer) { clearInterval(restTimer); restTimer=null; } $("#ovRest").style.display="none"; nextSet(); });
+$("#btnClose").addEventListener("click", closeOv);
+
+function readPerSetInputs(targets){
+  const vals = [];
+  for (let i=0;i<targets.length;i++){
+    const el = document.getElementById("perSet"+i);
+    const v = parseInt(el?.value,10);
+    vals.push(Number.isFinite(v)? v : (targets[i]==="AMRAP"?0:targets[i]));
+  }
+  return vals;
+}
+
+$("#saveSession").addEventListener("click", ()=>{
+  const ymd=todayYMD(); const t=dayTypeFor(state.startDate, ymd);
+  const tar=targetsFor(t,state.maxNow);
+  const perSet = readPerSetInputs(tar);
+  const totalDone = perSet.reduce((a,b)=>a+(parseInt(b)||0),0);
+  const techOk=$("#techOk").checked; const rirPlenty=$("#rirPlenty").checked;
+  const anyFail=guided.fails.some(v=>v===true); const fifthFailed=!!guided.fails[4];
+  let amrap=null; if (t==="T"){ amrap=perSet[0]||null; if(amrap) state.maxNow = Math.max(state.maxNow, Math.round(amrap)); }
+  state.history.push({date:ymd,type:t,targets:tar,perSet,totalDone,completed:!anyFail&&techOk,anyFail,techOk,rirPlenty,amrap});
+  if (t!=="T") { applyRules(t, {completed:!anyFail&&techOk, anyFail, techOk, rirPlenty, fifthFailed}); }
+  unlockBadges();
+  save(); guided={active:false,type:null,targets:[],rests:[],idx:0,fails:[false,false,false,false,false]};
+  $("#techOk").checked=false; $("#rirPlenty").checked=false;
+  renderToday(); renderHistory(); renderCharts(); renderStreaks(); renderBadges(); alert("Registo guardado.");
+});
+
+// ------- Boot -------
+(function init(){
+  renderSettings(); renderToday(); renderHistory(); renderCharts(); renderStreaks(); renderBadges();
+  if (!state.startDate) { state.startDate = todayYMD(); save(); }
+  $("#startDate").value = state.startDate;
+})();
+</script>
+</body>
+</html>
